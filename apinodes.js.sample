@@ -1,0 +1,9 @@
+module.exports = btsApiNodes = [
+    { url: "wss://bts.open.icowallet.net/ws", location: 'Hangzhou, China' },
+    {url: "wss://node.btscharts.com/ws", location: "Hong Kong"},
+    {url: "wss://bitshares.apasia.tech/ws", location: "Bangkok, Thailand"},
+    {url: "wss://japan.bitshares.apasia.tech/ws", location: "Tokyo, Japan"},
+    {url: "wss://bitshares.dacplay.org/ws", location: "Hangzhou, China"},
+    {url: "wss://bitshares-api.wancloud.io/ws", location: "China"},
+    {url: "wss://openledger.hk/ws", location: "Hong Kong"},
+];
