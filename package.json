@@ -9,8 +9,8 @@
   "author": "Pluswave <pluswave@xiaofuxing.name>",
   "license": "MIT",
   "dependencies": {
-    "bitsharesjs": "^1.7.1",
-    "bitsharesjs-ws": "https://github.com/pluswave/bitsharesjs-ws#0cc211d7c252ca7ff207da0a22151b10144cbca9",
+    "bitsharesjs": "^1.7.4",
+    "bitsharesjs-ws": "https://github.com/pluswave/bitsharesjs-ws#795d148ddb4892e596d0be76a602a9910a6e7875",
     "promise-retry": "^1.1.1"
   }
 }
