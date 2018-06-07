@@ -72,6 +72,7 @@ function simple_bot(account, active_key_wif, strategy) {
                     else {
                         state.direction_count = 0;
                     }
+                    state.direction = cur_dir;
                     cancelPromise = broadcast.doCancelOrder(account, active_key_wif, o[0].raw_order.id)
                 }
                 if( o.length < 2) {
