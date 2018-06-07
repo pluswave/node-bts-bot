@@ -8,7 +8,7 @@ For a market, quote_asset:base_asset. your bot account have some quote_asset and
 1. cd node-bts-bot
 1. npm install
 1. cp apinodes.js.sample apinodes.js
-1. modify apinode.js for your need
+1. modify apinodes.js for your need
 1. create a file my_bot.js, contains:
     ````
     'use strict';
@@ -25,6 +25,7 @@ For a market, quote_asset:base_asset. your bot account have some quote_asset and
         ratio_diff: 0.04,
         min_ratio: 0.25,
         max_ratio: 0.75,
+        price_adjust_ratio: 2
     }
 
     orders_bot.simple_bot(account, active_key_wif, strategy);

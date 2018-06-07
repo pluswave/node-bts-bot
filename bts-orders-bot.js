@@ -13,7 +13,9 @@ function simple_bot(account, active_key_wif, strategy) {
         },
         lower: {
             target_price: 0
-        }
+        },
+        direction: 'up',
+        direction_count: 0
     }
     var state;
     var fileName = './_state_' + account + '.json';
@@ -52,26 +54,44 @@ function simple_bot(account, active_key_wif, strategy) {
             .then((o) => {
                 var cancelPromise, calPromise, filledPrice = 0;
                 var new_lower, new_higher;
+                var cur_dir;
                 if (o.length == 1) { // cancel and update target
                     if (Math.abs(o[0].parsed.price - state.higher.target_price) < 0.0001) {
                         console.log('lower filled');
                         filledPrice = state.lower.target_price;
+                        cur_dir = 'down';
                     }
                     else if (Math.abs(o[0].parsed.price - state.lower.target_price) < 0.0001) {
                         console.log('higher filled');
                         filledPrice = state.higher.target_price;
+                        cur_dir = 'up';
+                    }
+                    if( cur_dir == state.direction ){
+                        state.direction_count ++;
+                    }
+                    else {
+                        state.direction_count = 0;
                     }
                     cancelPromise = broadcast.doCancelOrder(account, active_key_wif, o[0].raw_order.id)
                 }
                 if( o.length < 2) {
                     calPromise = accountMarket.get_account_asset_ratio(account, strategy.base_asset_symbol, strategy.quote_asset_symbol, filledPrice)
                         .then(r => {
+                            var down_price_diff, up_price_diff;
+                            if( cur_dir == 'down' ){
+                                down_price_diff = strategy.price_diff *  Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
+                                up_price_diff = strategy.price_diff;
+                            }
+                            else{
+                                down_price_diff = strategy.price_diff ;
+                                up_price_diff = strategy.price_diff * Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
+                            }
                             new_lower = {
-                                target_price: r.price - strategy.price_diff,
+                                target_price: r.price - down_price_diff,
                                 target_ratio: r.ratio + strategy.ratio_diff
                             };
                             new_higher = {
-                                target_price: r.price + strategy.price_diff,
+                                target_price: r.price + up_price_diff,
                                 target_ratio: r.ratio - strategy.ratio_diff
                             }
                             if( new_lower.target_price > state.min_ratio_price ){
