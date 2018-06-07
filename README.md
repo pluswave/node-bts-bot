@@ -7,7 +7,7 @@ For a market, quote_asset:base_asset. your bot account have some quote_asset and
 1. git clone https://github.com/pluswave/node-bts-bot.git
 1. cd node-bts-bot
 1. npm install
-1. cp apinode.js.sampe apinode.js
+1. cp apinodes.js.sample apinodes.js
 1. modify apinode.js for your need
 1. create a file my_bot.js, contains:
     ````
