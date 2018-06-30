@@ -106,8 +106,6 @@ function get_account_orders(account, base_asset_symbol, quote_asset_symbol) {
     return Promise.all([
         cache.get_full_account(account, true),
         cache.get_assets([base_asset_symbol, quote_asset_symbol]),
-        marketData.getLatestFillPrice(base_asset_symbol, quote_asset_symbol),
-        marketData.getMarketPrice(base_asset_symbol, quote_asset_symbol),
     ]).then(results => {
         var base_asset = results[1][0];
         var quote_asset = results[1][1];
