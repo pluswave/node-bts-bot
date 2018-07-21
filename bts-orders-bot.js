@@ -271,20 +271,11 @@ function simple_bot_2(account, active_key_wif, strategy) {
                 if( o.length < 2) {
                     calPromise = accountMarket.get_account_asset_ratio(account, strategy.base_asset_symbol, strategy.quote_asset_symbol, filledPrice)
                         .then(r => {
-                            var down_price_diff, up_price_diff;
-                            if( cur_dir == 'down' ){
-                                down_price_diff = strategy.price_diff *  Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
-                                up_price_diff = strategy.price_diff;
-                            }
-                            else{
-                                down_price_diff = strategy.price_diff ;
-                                up_price_diff = strategy.price_diff * Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
-                            }
                             new_lower = {
-                                target_price: r.price - down_price_diff,
+                                target_price: r.price - strategy.price_diff,
                             };
                             new_higher = {
-                                target_price: r.price + up_price_diff,
+                                target_price: r.price + strategy.price_diff,
                             }
                         })
                 }
@@ -293,14 +284,14 @@ function simple_bot_2(account, active_key_wif, strategy) {
                     }).catch ((e)=>{});
                 }
                 return calPromise && calPromise.then(() => {
-                    return accountMarket.get_account_balances(account);
+                    return accountMarket.get_account_balances(account, strategy.base_asset_symbol, strategy.quote_asset_symbol);
                 }).then( a=>{
                     return broadcast.doPlaceOrders(account, active_key_wif, [{
                         base_asset_symbol: strategy.base_asset_symbol,
                         quote_asset_symbol: strategy.quote_asset_symbol,
                         is_buy: true,
                         price_float: new_lower.target_price,
-                        quote_amount_float: a.base_balance * strategy.order_factor * new_lower.target_price
+                        quote_amount_float: a.base_balance * strategy.order_factor / new_lower.target_price
                     }, {
                         base_asset_symbol: strategy.base_asset_symbol,
                         quote_asset_symbol: strategy.quote_asset_symbol,
