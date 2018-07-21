@@ -56,12 +56,12 @@ function simple_bot(account, active_key_wif, strategy) {
                 var new_lower, new_higher;
                 var cur_dir;
                 if (o.length == 1) { // cancel and update target
-                    if (Math.abs(o[0].parsed.price - state.higher.target_price) < 0.0001) {
+                    if (Math.abs(o[0].parsed.price - state.higher.target_price)/o[0].parsed.price < 0.000001) {
                         console.log('lower filled');
                         filledPrice = state.lower.target_price;
                         cur_dir = 'down';
                     }
-                    else if (Math.abs(o[0].parsed.price - state.lower.target_price) < 0.0001) {
+                    else if (Math.abs(o[0].parsed.price - state.lower.target_price)/o[0].parsed.price < 0.000001) {
                         console.log('higher filled');
                         filledPrice = state.higher.target_price;
                         cur_dir = 'up';
@@ -249,12 +249,12 @@ function simple_bot_2(account, active_key_wif, strategy) {
                 var new_lower, new_higher;
                 var cur_dir;
                 if (o.length == 1) { // cancel and update target
-                    if (Math.abs(o[0].parsed.price - state.higher.target_price) < 0.0001) {
+                    if (Math.abs(o[0].parsed.price - state.higher.target_price)/o[0].parsed.price < 0.000001) {
                         console.log('lower filled');
                         filledPrice = state.lower.target_price;
                         cur_dir = 'down';
                     }
-                    else if (Math.abs(o[0].parsed.price - state.lower.target_price) < 0.0001) {
+                    else if (Math.abs(o[0].parsed.price - state.lower.target_price)/o[0].parsed.price < 0.000001) {
                         console.log('higher filled');
                         filledPrice = state.higher.target_price;
                         cur_dir = 'up';
