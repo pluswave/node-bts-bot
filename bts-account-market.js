@@ -102,6 +102,41 @@ function get_target_order_data(account, base_asset_symbol, quote_asset_symbol, t
 
 }
 
+function get_account_balances(account, base_asset_symbol, quote_asset_symbol) {
+    return Promise.all([
+        cache.get_full_account(account, true),
+        cache.get_assets([base_asset_symbol, quote_asset_symbol]),
+    ]).then(results => {
+        var balances = results[0].balances;
+        var base_asset = results[1][0];
+        var quote_asset = results[1][1];
+        var base_balance, quote_balance;
+
+        balances.forEach((balance) => {
+            if (balance.asset_type == base_asset.id) {
+                base_balance = balance.balance / Math.pow(10, base_asset.precision);
+            }
+            else if (balance.asset_type == quote_asset.id) {
+                quote_balance = balance.balance / Math.pow(10, quote_asset.precision);
+            }
+        })
+        results[0].limit_orders.forEach(o => {
+            if (o.sell_price.base.asset_id == base_asset.id) {
+                base_balance += o.for_sale / Math.pow(10, base_asset.precision);
+            }
+            else if (o.sell_price.base.asset_id == quote_asset.id) {
+                quote_balance += o.for_sale / Math.pow(10, quote_asset.precision);
+            }
+        });
+
+        return {
+            base_balance: base_balance,
+            quote_balance: quote_balance
+        }
+    })
+ 
+}
+
 function get_account_orders(account, base_asset_symbol, quote_asset_symbol) {
     return Promise.all([
         cache.get_full_account(account, true),
@@ -133,5 +168,6 @@ function get_account_orders(account, base_asset_symbol, quote_asset_symbol) {
 module.exports = {
     get_account_asset_ratio: get_account_asset_ratio,
     get_target_order_data: get_target_order_data,
+    get_account_balances: get_account_balances,
     get_account_orders: get_account_orders,
 }

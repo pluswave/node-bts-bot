@@ -201,6 +201,151 @@ function simple_bot(account, active_key_wif, strategy) {
     })
 }
 
+function simple_bot_2(account, active_key_wif, strategy) {
+    const default_state = {
+        higher: {
+            target_price: 0
+        },
+        lower: {
+            target_price: 0
+        },
+    }
+    var state;
+    var fileName = './_state_' + account + '.json';
+    function loadState(){
+        var s
+        try {
+            s = fs.readFileSync(fileName, {
+                encoding: 'utf-8'
+            });
+            state = JSON.parse(s);
+        }
+        catch (e){
+            state = default_state;
+        }
+    }
+
+    function saveState(){
+        fs.writeFileSync(fileName, JSON.stringify(state), {
+            encoding: 'utf8'
+        })
+    }
+    loadState();
+    var timer = null;
+
+    var in_check = false;
+    function check() {
+        if (in_check) {
+            console.log('in_check');
+            // setTimeout(check, 1000);
+            timer = timer || setInterval(check, 10 * 1000);
+            return;
+        }
+        in_check = true;
+        console.log('checking ....');
+        accountMarket.get_account_orders(account, strategy.base_asset_symbol, strategy.quote_asset_symbol)
+            .then((o) => {
+                var cancelPromise, calPromise, filledPrice = 0;
+                var new_lower, new_higher;
+                var cur_dir;
+                if (o.length == 1) { // cancel and update target
+                    if (Math.abs(o[0].parsed.price - state.higher.target_price) < 0.0001) {
+                        console.log('lower filled');
+                        filledPrice = state.lower.target_price;
+                        cur_dir = 'down';
+                    }
+                    else if (Math.abs(o[0].parsed.price - state.lower.target_price) < 0.0001) {
+                        console.log('higher filled');
+                        filledPrice = state.higher.target_price;
+                        cur_dir = 'up';
+                    }
+                    if( cur_dir == state.direction ){
+                        state.direction_count ++;
+                    }
+                    else {
+                        state.direction_count = 0;
+                    }
+                    state.direction = cur_dir;
+                    cancelPromise = broadcast.doCancelOrder(account, active_key_wif, o[0].raw_order.id)
+                }
+                if( o.length < 2) {
+                    calPromise = accountMarket.get_account_asset_ratio(account, strategy.base_asset_symbol, strategy.quote_asset_symbol, filledPrice)
+                        .then(r => {
+                            var down_price_diff, up_price_diff;
+                            if( cur_dir == 'down' ){
+                                down_price_diff = strategy.price_diff *  Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
+                                up_price_diff = strategy.price_diff;
+                            }
+                            else{
+                                down_price_diff = strategy.price_diff ;
+                                up_price_diff = strategy.price_diff * Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
+                            }
+                            new_lower = {
+                                target_price: r.price - down_price_diff,
+                            };
+                            new_higher = {
+                                target_price: r.price + up_price_diff,
+                            }
+                        })
+                }
+                if( cancelPromise ) {
+                    cancelPromise.then( ()=>{
+                    }).catch ((e)=>{});
+                }
+                return calPromise && calPromise.then(() => {
+                    return accountMarket.get_account_balances(account);
+                }).then( a=>{
+                    return broadcast.doPlaceOrders(account, active_key_wif, [{
+                        base_asset_symbol: strategy.base_asset_symbol,
+                        quote_asset_symbol: strategy.quote_asset_symbol,
+                        is_buy: true,
+                        price_float: new_lower.target_price,
+                        quote_amount_float: a.base_balance * strategy.order_factor * new_lower.target_price
+                    }, {
+                        base_asset_symbol: strategy.base_asset_symbol,
+                        quote_asset_symbol: strategy.quote_asset_symbol,
+                        is_buy: false,
+                        price_float: new_higher.target_price,
+                        quote_amount_float: a.quote_balance * strategy.order_factor,
+                    }])
+                }).then((r) => {
+                    state.lower = new_lower;
+                    state.higher = new_higher;
+                    console.log(state);
+                    saveState();
+                    setTimeout(()=>{
+                        in_check = false;
+                    }, 10000);
+                    if( timer ) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                    return "from orders";
+                })
+            }).then((r) => {
+                if ( r != 'from orders'){
+                    in_check = false;
+                }
+            }).catch( (e)=>{
+                console.log(e);
+                in_check = false;
+                // process.exit(1)
+                timer = timer || setInterval(check, 10 * 1000);
+            })
+    }
+
+    check();
+
+    cache.add_full_account_change_callback((s) => {
+        console.log('account change', s);
+        if (s == account) {
+            check();
+        }
+    })
+}
+
+
 module.exports = {
-    simple_bot: simple_bot
+    simple_bot: simple_bot,
+    simple_bot_2: simple_bot_2
 }
