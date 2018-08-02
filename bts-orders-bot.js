@@ -209,6 +209,8 @@ function simple_bot_2(account, active_key_wif, strategy) {
         lower: {
             target_price: 0
         },
+        direction: 'up',
+        direction_count: 0
     }
     var state;
     var fileName = './_state_' + account + '.json';
@@ -271,11 +273,21 @@ function simple_bot_2(account, active_key_wif, strategy) {
                 if( o.length < 2) {
                     calPromise = accountMarket.get_account_asset_ratio(account, strategy.base_asset_symbol, strategy.quote_asset_symbol, filledPrice)
                         .then(r => {
+                            var down_price_diff, up_price_diff;
+                            if( cur_dir == 'down' ){
+                                down_price_diff = strategy.price_diff *  Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
+                                up_price_diff = strategy.price_diff;
+                            }
+                            else{
+                                down_price_diff = strategy.price_diff ;
+                                up_price_diff = strategy.price_diff * Math.pow( (strategy.price_adjust_ratio || 1) , state.direction_count);
+                            }
+
                             new_lower = {
-                                target_price: r.price - strategy.price_diff,
+                                target_price: r.price - down_price_diff,
                             };
                             new_higher = {
-                                target_price: r.price + strategy.price_diff,
+                                target_price: r.price + up_price_diff,
                             }
                         })
                 }
